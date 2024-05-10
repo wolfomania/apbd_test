@@ -76,6 +76,18 @@ public class BookRepository : IBookRepository
         await reader.ReadAsync();
 
         var bookId = reader.GetInt32(reader.GetOrdinal("Id"));
+        
+        reader.Close();
+        command.Parameters.Clear();
+        
+        const string getPhQuery = "SELECT 1 FROM publishing_houses WHERE PK = @ID";
+        command.CommandText = getPhQuery;
+        command.Parameters.AddWithValue("@ID", addBookRequest.PublishingHouseId);
+
+        reader = await command.ExecuteReaderAsync();
+
+        if (!reader.HasRows)
+            return -3;
 
         command.Parameters.Clear();
         reader.Close();
