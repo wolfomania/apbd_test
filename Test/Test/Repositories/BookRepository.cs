@@ -55,8 +55,49 @@ public class BookRepository : IBookRepository
         return bookList;
     }
 
-    public Task<int> AddBookEdition(AddBookRequest addBookRequest)
+    public async Task<int> AddBookEdition(AddBookRequest addBookRequest)
     {
-        const string query = "INSERT INTO "
+        const string getBookIdQuery = "SELECT PK as Id FROM books WHERE title = @TITLE";
+        
+        await using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
+        await using SqlCommand command = new SqlCommand();
+
+        command.Connection = connection;
+        command.CommandText = getBookIdQuery;
+        command.Parameters.AddWithValue("@TITLE", addBookRequest.BookTitle);
+
+        await connection.OpenAsync();
+
+        var reader = await command.ExecuteReaderAsync();
+
+        if (!reader.HasRows)
+            return -1;
+
+        await reader.ReadAsync();
+
+        var bookId = reader.GetInt32(reader.GetOrdinal("Id"));
+
+        command.Parameters.Clear();
+        reader.Close();
+        
+        const string insertQuery =
+            "INSERT INTO books_editions(FK_publishing_house, FK_book, edition_title, release_date) " +
+            "VALUES (@PUBLISHING_HOUSE_ID, @BOOK_ID, @EDITION_TITLE, @RELEASE_DATE) " +
+            "SELECT @@IDENTITY as Id";
+
+        command.CommandText = insertQuery;
+        command.Parameters.AddWithValue("@PUBLISHING_HOUSE_ID", addBookRequest.PublishingHouseId);
+        command.Parameters.AddWithValue("@BOOK_ID", bookId);
+        command.Parameters.AddWithValue("@EDITION_TITLE", addBookRequest.EditionTitle);
+        command.Parameters.AddWithValue("@RELEASE_DATE", addBookRequest.ReleaseDate);
+
+        reader = await command.ExecuteReaderAsync();
+
+        if (!reader.HasRows)
+            return -2;
+
+        await reader.ReadAsync();
+
+        return reader.GetInt32(reader.GetOrdinal("Id"));
     }
 }

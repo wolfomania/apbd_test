@@ -1,3 +1,4 @@
+using System.Transactions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Test.Models.DTO;
@@ -23,9 +24,33 @@ namespace Test.Controllers
             
             return Ok(books);
         }
-        
-        
-        
-        
+
+        [HttpPost]
+        public async Task<IActionResult> Add(AddBookRequest addBookRequest)
+        {
+            var id = 0;
+            try
+            {
+                using TransactionScope scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
+                
+                id = await _repository.AddBookEdition(addBookRequest);
+                
+                scope.Complete();
+            }
+            catch (TransactionAbortedException ex)
+            {
+                Console.WriteLine("TransactionAbortedException Message: {0}", ex.Message);
+                throw;
+            }
+            
+            return id switch
+            {
+                -1 => NotFound("No book with such title"),
+                -2 => BadRequest(),
+                _ => Created("", "Record inserted under the value" + id)
+            };
+        }
+
+
     }
 }
