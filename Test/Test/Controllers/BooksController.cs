@@ -47,7 +47,7 @@ namespace Test.Controllers
             {
                 -1 => NotFound("No book with such title"),
                 -2 => BadRequest(),
-                _ => Created("", "Record inserted under the value" + id)
+                _ => Created("", "Record inserted under the value " + id)
             };
         }
 

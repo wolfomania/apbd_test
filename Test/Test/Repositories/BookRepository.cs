@@ -57,7 +57,7 @@ public class BookRepository : IBookRepository
 
     public async Task<int> AddBookEdition(AddBookRequest addBookRequest)
     {
-        const string getBookIdQuery = "SELECT PK as Id FROM books WHERE title = @TITLE";
+        const string getBookIdQuery = "SELECT cast(PK as int) as Id FROM books WHERE title = @TITLE";
         
         await using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
         await using SqlCommand command = new SqlCommand();
@@ -83,7 +83,7 @@ public class BookRepository : IBookRepository
         const string insertQuery =
             "INSERT INTO books_editions(FK_publishing_house, FK_book, edition_title, release_date) " +
             "VALUES (@PUBLISHING_HOUSE_ID, @BOOK_ID, @EDITION_TITLE, @RELEASE_DATE) " +
-            "SELECT @@IDENTITY as Id";
+            "SELECT Cast(@@IDENTITY as int) as Id";
 
         command.CommandText = insertQuery;
         command.Parameters.AddWithValue("@PUBLISHING_HOUSE_ID", addBookRequest.PublishingHouseId);
