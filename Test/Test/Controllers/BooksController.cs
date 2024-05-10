@@ -40,12 +40,12 @@ namespace Test.Controllers
             catch (TransactionAbortedException ex)
             {
                 Console.WriteLine("TransactionAbortedException Message: {0}", ex.Message);
-                throw;
+                return BadRequest("Some error");
             }
             
             return id switch
             {
-                -1 => NotFound("No book with such title"),
+                // -1 => NotFound("No book with such title"),
                 -2 => BadRequest(),
                 -3 => NotFound("No such Publishing House"),
                 _ => Created("", "Record inserted under the value " + id)

@@ -57,24 +57,21 @@ public class BookRepository : IBookRepository
 
     public async Task<int> AddBookEdition(AddBookRequest addBookRequest)
     {
-        const string getBookIdQuery = "SELECT cast(PK as int) as Id FROM books WHERE title = @TITLE";
+        const string addBookQuery = "INSERT INTO books (title) VALUES (@TITLE) SELECT cast(@@IDENTITY as int) as Id";
         
         await using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
         await using SqlCommand command = new SqlCommand();
 
         command.Connection = connection;
-        command.CommandText = getBookIdQuery;
+        command.CommandText = addBookQuery;
         command.Parameters.AddWithValue("@TITLE", addBookRequest.BookTitle);
 
         await connection.OpenAsync();
 
         var reader = await command.ExecuteReaderAsync();
-
-        if (!reader.HasRows)
-            return -1;
-
+        
         await reader.ReadAsync();
-
+        
         var bookId = reader.GetInt32(reader.GetOrdinal("Id"));
         
         reader.Close();
